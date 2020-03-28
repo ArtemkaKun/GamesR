@@ -1,27 +1,44 @@
 package reviewCollector
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 )
 
-var REQ_PARAMS = PARAMS{"all", "en", "", "",
-	"all", "all", "100", "836620"}
+func GetReviews(params PARAMS) []Review{
+	var collected_reviews []Review
 
-func GetReviews() {
-	resp, err := http.Get(fmt.Sprintf("https://store.steampowered.com/appreviews/%v?json=1&filter=%v&language=%v&review_type=%vpurchase_type=%v&num_per_page=%v",
-		REQ_PARAMS.AppID, REQ_PARAMS.Filter, REQ_PARAMS.Language, REQ_PARAMS.Review_type,
-		REQ_PARAMS.Purchase_type, REQ_PARAMS.Num_per_page))
-	if err != nil {
-		fmt.Println(err.Error())
+	for true {
+		var buffer_info Info
+
+		resp, err := http.Get(fmt.Sprintf("https://store.steampowered.com/appreviews/%v?json=1&filter=%v&language=%v&review_type=%v&purchase_type=%v&num_per_page=%v&cursor=%v",
+			params.AppID, params.Filter, params.Language, params.Review_type,
+			params.Purchase_type, params.Num_per_page, params.Cursor))
+		if err != nil {
+			fmt.Println(err.Error())
+			break
+		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		err = json.Unmarshal(body, &buffer_info)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		if len(buffer_info.Reviews) == 0 {
+			break
+		}
+
+		collected_reviews = append(collected_reviews, buffer_info.Reviews...)
+		params.Cursor = buffer_info.Cursor
 	}
-	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	fmt.Println(string(body))
+	return collected_reviews
 }

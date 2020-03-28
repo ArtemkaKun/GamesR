@@ -10,3 +10,12 @@ type PARAMS struct {
 	Num_per_page  string
 	AppID         string
 }
+
+type Info struct {
+	Reviews []Review
+	Cursor string
+}
+type Review struct {
+	Review string
+	Language string
+}
