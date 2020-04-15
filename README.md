@@ -1,2 +1,2 @@
-# GamesR
-Honest games reviews
+# Rgrab
+Get game reviews from Steam using Steamworks
